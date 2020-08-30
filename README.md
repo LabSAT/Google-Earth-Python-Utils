@@ -14,6 +14,7 @@ Google Earth Engine에 대한 인증이 상대적으로 간편한 [Google Colab]
 - 날짜 필터링 가능
 - 구름양 검출 및 해당 데이터셋 중에서 가장 구름이 적은 이미지 획득 가능
 - 손쉬운 resampling을 통한 화질 개선
+- (new) NDVI 산출 공식 적용
 
  
 
@@ -81,3 +82,40 @@ result = earth.plot_image(least_cloudy_img.resample('bicubic'), parameters, clou
 result
 
 ```
+
+
+### 4. 이미지 저장
+
+이미지 저장은 클래스 내의 `save_image` 함수를 이용합니다. 
+아래는 위도, 경도를 포함한 데이터 프레임을 활용한 이미지 다운로드 및 저장 프로세스의 예시입니다.
+
+```python
+
+cloud_coverage = "CLOUDY_PIXEL_PERCENTAGE"
+
+for _, r in train_df.iterrows():
+  lat, lon, name = (r.lat, r.lon, r.image_name)
+
+  earth.select_AOI(lat,lon, 5, ("2016-01-01", "2016-12-31"))
+
+  parameters = {
+    'min': 0.0,
+    'max': 2500,
+    'bands': ['B4', 'B3', 'B2'],
+    'dimensions': 512,
+    'region': earth.AOI
+  }
+
+  earth.sort_by(cloud_coverage)
+
+  least_cloudy_img = earth.get_collections_at(0)
+  result = earth.plot_image(least_cloudy_img.resample('bicubic'), parameters, cloud_coverage)
+
+  earth.save_image(map_path / name, result)
+
+```
+
+# Update
+
+- 2020-08-30: NDVI 산출 공식 정리 (jinwoo95) 및 Tutorial 문서 (sanghoho) 
+- 2020-07-: Repository 생성 및 초기 코드 작성
